@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding ="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xmlns:context="http://www.springframework.org/schema/context" 
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+		
+	<bean id="parentDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource" abstract="true"></bean>
+	
+	<bean id="strategyDataSource" parent="parentDataSource">
+		<property name="url" value="jdbc:oracle:thin:@iaasln00000601.svr.us.jpmchase.net:6136/D001CCAT_iaasln00000601" />
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" />
+		<property name="username" value="Rmdwdev" />
+		<property name="password" value="cDKpfT29" />
+	</bean>
+	<bean id="legacyDataSource" parent="parentDataSource">
+		<property name="url" value="jdbc:sqlserver://6136" />
+		<property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
+		<property name="username" value="Rmdwdev" />
+		<property name="password" value="cDKpfT29" />
+	</bean>
+	
+	<bean id="abstractionDao" class="com.billing.dataisolationservice.dao.DataIsolationServiceAbstractionDao">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean id="dataSource" class="com.billing.dataisolationservice.helper.DataSourceRouter">
+		<property name="targetDataSources">
+			<map key-type="com.billing.dataisolationservice.helper.DBType">
+				<entry key="LEGACY" value-ref="legacyDataSource"></entry>
+				<entry key="STRATEGY" value-ref="strategyDataSource"></entry>
+			</map>
+		</property>
+		<property name="defaultTargetDataSource" ref="legacyDataSource"></property>
+	</bean>
+	
+	<context:component-scan base-package="com.billing.dataisolationservice" />
+</beans>
