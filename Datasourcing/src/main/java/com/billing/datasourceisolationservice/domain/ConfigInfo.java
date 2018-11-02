@@ -4,8 +4,15 @@ public class ConfigInfo {
 	
 	String report_name;
 	String location;
+	String database;
 	
 	
+	public String getDatabase() {
+		return database;
+	}
+	public void setDatabase(String database) {
+		this.database = database;
+	}
 	public String getReport_name() {
 		return report_name;
 	}

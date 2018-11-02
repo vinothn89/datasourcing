@@ -5,7 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +24,13 @@ import com.billing.dataisolationservice.helper.DBType;
 import com.billing.dataisolationservice.helper.DbContextHolder;
 import com.billing.dataisolationservice.services.LegacyService;
 import com.billing.dataisolationservice.services.StrategicService;
+import com.billing.datasourceisolationservice.domain.ConfigInfo;
 
 @Controller
 @EnableAsync
 public class DataIsolationServiceController {
 	
-	private static final Logger logger = Logger.getLogger(DataIsolationServiceController.class);
+	private static final Logger logger = LoggerFactory.getLogger(DataIsolationServiceController.class);
 	
 	@Autowired
 	DataIsolationServiceDao dao;
@@ -42,33 +44,35 @@ public class DataIsolationServiceController {
 	@Autowired
 	StrategicService strategyservice;
 	
-	@RequestMapping(value = ""
-			+"",method = RequestMethod.GET)
+	@RequestMapping(value = ""+"",method = RequestMethod.GET)
 	public ResponseEntity<ArrayList<Map<String,Object>>> getDataSearchWithAbstraction(
 			@RequestParam(value = "report") String report, RedirectAttributes redirectAttributes, ModelMap model)
 	        throws IOException {
 		
-		System.out.println("hai"+report);
+		logger.info("hai"+report);
 		
 		List<Map<String,Object>> result = null;
 		
-		System.out.println("hai"+report);
-		String location = dao.getLocation(report);
+		ConfigInfo info = dao.getLocation(report);
 		String sql = null;
-		if (location.equals("Legacy")) {
+		if (info.getLocation().equalsIgnoreCase("Legacy")) {
 			sql = legacyservice.getLegacyQuery(report);
-			DbContextHolder.setDbType(DBType.LEGACY);
-	}else {
-		sql = strategyservice.getStrategyQuery(report);
-		DbContextHolder.setDbType(DBType.STRATEGY);				
-	}
-	
+		}
+		else {
+			sql = strategyservice.getStrategyQuery(report);
+		}
+		
+		if(null!=info.getDatabase())
+		{
+			DbContextHolder.setDbType(DBType.valueOf(info.getDatabase()));
+		}
+		
 	result = daoabs.executeQuery(sql);
 	
 	return new ResponseEntity<ArrayList<Map<String, Object>>>((ArrayList<Map<String, Object>>) result,
 			HttpStatus.OK);
 	
-}
+	}
 
 }
 
