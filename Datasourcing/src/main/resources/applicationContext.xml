@@ -7,16 +7,23 @@
 	<bean id="parentDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource" abstract="true"></bean>
 	
 	<bean id="strategyDataSource" parent="parentDataSource">
-		<property name="url" value="jdbc:oracle:thin:@iaasln00000601.svr.us.jpmchase.net:6136/D001CCAT_iaasln00000601" />
-		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" />
-		<property name="username" value="Rmdwdev" />
-		<property name="password" value="cDKpfT29" />
+		<property name="url" value="jdbc:sqlserver://HP246\\SQLEXPRESS:1433;databaseName=springbootdb" />
+		<property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
+		<property name="username" value="springbootdb" />
+		<property name="password" value="spring123" />
 	</bean>
 	<bean id="legacyDataSource" parent="parentDataSource">
-		<property name="url" value="jdbc:sqlserver://6136" />
+		<property name="url" value="jdbc:sqlserver://HP246\\SQLEXPRESS:1433;databaseName=springbootdb" />
 		<property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
-		<property name="username" value="Rmdwdev" />
-		<property name="password" value="cDKpfT29" />
+		<property name="username" value="springbootdb" />
+		<property name="password" value="spring123" />
+	</bean>
+	
+	<bean id="legacy_MYSQL1DataSource" parent="parentDataSource">
+		<property name="url" value="jdbc:sqlserver://HP246\\SQLEXPRESS:1433;databaseName=springbootdb" />
+		<property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver" />
+		<property name="username" value="springbootdb" />
+		<property name="password" value="spring123" />
 	</bean>
 	
 	<bean id="abstractionDao" class="com.billing.dataisolationservice.dao.DataIsolationServiceAbstractionDao">
@@ -27,6 +34,8 @@
 			<map key-type="com.billing.dataisolationservice.helper.DBType">
 				<entry key="LEGACY" value-ref="legacyDataSource"></entry>
 				<entry key="STRATEGY" value-ref="strategyDataSource"></entry>
+				<entry key="DB2_DS1" value-ref="legacyDataSource"></entry>
+				<entry key="MYSSQL_DS1" value-ref="legacy_MYSQL1DataSource"></entry>
 			</map>
 		</property>
 		<property name="defaultTargetDataSource" ref="legacyDataSource"></property>

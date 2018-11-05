@@ -18,7 +18,7 @@ public class StrategicService {
 	@Async("asyncExecutor")
 	public String getStrategyQuery(String report) {
 		System.out.println("hai");
-		final String StrategyUrl = "http:database/strategy/reportname)";
+		final String StrategyUrl = "http:localhost:8081/lookupservice";
 		String query = null;
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("reportname",report);

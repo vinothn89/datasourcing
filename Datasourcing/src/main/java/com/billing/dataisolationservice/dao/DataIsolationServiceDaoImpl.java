@@ -23,7 +23,7 @@ public class DataIsolationServiceDaoImpl  implements DataIsolationServiceDao{
 	
 	@Override
 	public ConfigInfo getLocation(String reportgenerate) {
-		String sql = "SELECT REPORT_NAME,LOCATION,DATABASE FROM CONFIG WHERE REPORT_NAME=?";
+		String sql = "SELECT REPORT_NAME,LOCATION,DB_DETAILS FROM CONFIG WHERE REPORT_NAME=?";
 		try {
 			System.out.println("rep"+reportgenerate);
 			
