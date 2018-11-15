@@ -52,8 +52,13 @@ public class CustomOutputStreamWriter{
 		try {
 			
 			String workingDirectory = System.getProperty("user.dir");
-			System.out.println("Working Directory Location:" + workingDirectory);
-			stream.write(new FileOutputStream(workingDirectory+File.separator+"target"+File.separator+"output.json"));
+			File file = new File(workingDirectory+File.separator+"target"+File.separator+"output.json");
+			if(!file.exists())
+				file.createNewFile();
+			
+			System.out.println("File Location:" + file.getAbsolutePath());
+			
+			stream.write(new FileOutputStream(file));
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
