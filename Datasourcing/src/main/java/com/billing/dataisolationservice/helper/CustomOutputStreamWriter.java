@@ -1,5 +1,6 @@
 package com.billing.dataisolationservice.helper;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -11,20 +12,13 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class CustomOutputStreamWriter{
 
-	/**
-	 * 
-	 */
-	private ObjectMapper objectMapper;
-
-    public CustomOutputStreamWriter() {
-        objectMapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-    }
 	
 	public boolean writeJsonToFile(List<Map<String, Object>> responseOutput) throws WebApplicationException
 	{
@@ -32,7 +26,8 @@ public class CustomOutputStreamWriter{
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
 				
-				JsonGenerator jg = objectMapper.getJsonFactory().createJsonGenerator(output, JsonEncoding.UTF8 );
+				JsonFactory jsonFactory = new JsonFactory();
+				JsonGenerator jg = jsonFactory.createGenerator(output, JsonEncoding.UTF8);
                 jg.writeStartArray();
                 
                 for (Map<String, Object> map : responseOutput)
@@ -55,7 +50,10 @@ public class CustomOutputStreamWriter{
 		};
 		
 		try {
-			stream.write(new ObjectOutputStream(new FileOutputStream("target/output.json")));
+			
+			String workingDirectory = System.getProperty("user.dir");
+			System.out.println("Working Directory Location:" + workingDirectory);
+			stream.write(new FileOutputStream(workingDirectory+File.separator+"target"+File.separator+"output.json"));
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
