@@ -1,9 +1,11 @@
 package com.billing.dataisolationservice.dao;
 
+import java.util.List;
+
 import com.billing.datasourceisolationservice.domain.ConfigInfo;
 
 public interface DataIsolationServiceDao {
 	
-	public ConfigInfo getLocation(String reportgenerate);
+	public List<ConfigInfo> getLocation(String reportgenerate);
 
 }

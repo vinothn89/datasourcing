@@ -15,21 +15,21 @@ public class StrategicService {
 	@Autowired
 	RestTemplate restTemplate;
 	
-	@Async("asyncExecutor")
+	//@Async("asyncExecutor")
 	public String getStrategyQuery(String report) {
 		System.out.println("hai");
 		final String StrategyUrl = "http:localhost:8081/lookupservice";
 		String query = null;
-		Map<String, String> params = new HashMap<String, String>();
+		/*Map<String, String> params = new HashMap<String, String>();
 		params.put("reportname",report);
 		System.out.println("url:" + StrategyUrl);
 		ResponseEntity<String> response = restTemplate.getForEntity(StrategyUrl, String.class, params);
 		if (response != null) {
 			System.out.println(response.getBody());
 			query = response.getBody();
-		}
+		}*/
 		
-		return query;
+		return "select * from task";
 	}
 
 

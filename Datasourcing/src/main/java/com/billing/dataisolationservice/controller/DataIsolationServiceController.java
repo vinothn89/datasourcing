@@ -10,7 +10,9 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -19,6 +21,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.billing.dataisolationservice.dao.DataIsolationServiceAbstractionDao;
@@ -26,7 +29,6 @@ import com.billing.dataisolationservice.dao.DataIsolationServiceDao;
 import com.billing.dataisolationservice.helper.CustomOutputStreamWriter;
 import com.billing.dataisolationservice.helper.DBType;
 import com.billing.dataisolationservice.helper.DbContextHolder;
-import com.billing.dataisolationservice.helper.GenericResponse;
 import com.billing.dataisolationservice.services.LegacyService;
 import com.billing.dataisolationservice.services.StrategicService;
 import com.billing.datasourceisolationservice.domain.ConfigInfo;
@@ -57,72 +59,83 @@ public class DataIsolationServiceController {
 		
 		List<Map<String,Object>> result = null;
 		
-		ConfigInfo info = dao.getLocation(report);
+		List<ConfigInfo> infoList = dao.getLocation(report);
 		String sql = null;
-		if (info.getLocation().equalsIgnoreCase("Legacy")) 
+		
+		for (ConfigInfo configInfo : infoList) 
 		{
-			sql = legacyservice.getLegacyQuery(report);
-		}
-		else {
-			sql = strategyservice.getStrategyQuery(report);
+			if (configInfo.getLocation().equalsIgnoreCase("Legacy")) 
+			{
+				sql = legacyservice.getLegacyQuery(report);
+			}
+			else {
+				sql = strategyservice.getStrategyQuery(report);
+			}
+			
+			if(null!=configInfo.getDatabase())
+			{
+				DbContextHolder.setDbType(DBType.valueOf(configInfo.getDatabase()));
+			}
+			
+			result = daoabs.executeQuery(sql);
 		}
 		
-		if(null!=info.getDatabase())
-		{
-			DbContextHolder.setDbType(DBType.valueOf(info.getDatabase()));
-		}
-		
-		result = daoabs.executeQuery(sql);
-	
 	
 		return CompletableFuture.completedFuture(new ResponseEntity<ArrayList<Map<String, Object>>>(
 				(ArrayList<Map<String, Object>>) result, HttpStatus.OK));
 	
 	}
 	
-	@RequestMapping(value = "/dis",method = RequestMethod.GET)
+	@RequestMapping(value = "/dis",method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Async("asyncExecutor")
-	public CompletableFuture<ResponseEntity<GenericResponse>> getDataSearchAndWrite(
+	public CompletableFuture<ResponseEntity<StreamingResponseBody>> getDataSearchAndWrite(
 			@RequestParam(value = "report") String report, RedirectAttributes redirectAttributes, ModelMap model)
 	        throws IOException, InterruptedException, ExecutionException {
 		
 		logger.info("Enter method - getDataSearchAndWrite");
 		
-		List<Map<String,Object>> result = null;
+		if("".equalsIgnoreCase(report))
+		{
+			report = "December";
+		}
 		
-		ConfigInfo info = dao.getLocation(report);
+		List<Map<String,Object>> result = null;
+		String isWriteJsonComplete = null;
+		
+		List<ConfigInfo> info = dao.getLocation(report);
 		String sql = null;
 		
-		if (info.getLocation().equalsIgnoreCase("Legacy")) {
-			sql = legacyservice.getLegacyQuery(report);
-		}
-		else {
-			sql = strategyservice.getStrategyQuery(report);
+		for (ConfigInfo configInfo : info) {
+			
+			if (configInfo.getLocation().equalsIgnoreCase("Legacy")) {
+				sql = legacyservice.getLegacyQuery(report);
+			}
+			else {
+				sql = strategyservice.getStrategyQuery(report);
+			}
+			
+			if(null!=configInfo.getDatabase())
+			{
+				DbContextHolder.setDbType(DBType.valueOf(configInfo.getDatabase()));
+			}
+			
+			result = daoabs.executeQuery(sql);
+		    
+			isWriteJsonComplete = new CustomOutputStreamWriter().writeJsonToFile(result);
+			
 		}
 		
-		if(null!=info.getDatabase())
-		{
-			DbContextHolder.setDbType(DBType.valueOf(info.getDatabase()));
-		}
 		
-		result = daoabs.executeQuery(sql);
-	    
-		boolean isWriteJsonComplete = new CustomOutputStreamWriter().writeJsonToFile(result);
+		final String resultJson = isWriteJsonComplete;
+		StreamingResponseBody stream = out ->
+		{
+			out.write(resultJson.getBytes());
+		};
 		
-		GenericResponse genericResponse = new GenericResponse();
-		genericResponse.setRows(result);
-		if(isWriteJsonComplete)
-		{
-			genericResponse.setStatusCode(HttpStatus.OK.value());
-			genericResponse.setMessage("File creation successful");
-			return CompletableFuture.completedFuture(new ResponseEntity<GenericResponse>(genericResponse, HttpStatus.OK));
-		}
-		else
-		{
-			genericResponse.setStatusCode(HttpStatus.EXPECTATION_FAILED.value());
-			genericResponse.setMessage("Unable to create the batch file");
-			return CompletableFuture.completedFuture(new ResponseEntity<GenericResponse>(genericResponse, HttpStatus.EXPECTATION_FAILED));
-		}
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Content-Disposition", "attachment;filename=\"output.json\"");
+		
+		return CompletableFuture.completedFuture(new ResponseEntity<StreamingResponseBody>(stream, headers, HttpStatus.OK));
 		
 	}
 	

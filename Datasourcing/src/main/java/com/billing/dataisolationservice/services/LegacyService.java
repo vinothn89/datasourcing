@@ -31,7 +31,7 @@ public class LegacyService {
 			query = response.getBody();
 		}*/
 		
-		return "select * from advertisers";
+		return "select * from task";
 	}
 
 }

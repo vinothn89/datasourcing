@@ -15,7 +15,6 @@ import org.springframework.scheduling.annotation.Async;
  */
 public class DataIsolationServiceAbstractionDao extends JdbcDaoSupport {
 	
-	@Async("asyncExecutor")
 	public List<Map<String, Object>> executeQuery(String query) {
 		// TODO Auto-generated method stub
 		List<Map<String, Object>> result1 = null;
