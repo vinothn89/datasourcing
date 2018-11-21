@@ -29,6 +29,7 @@ import com.billing.dataisolationservice.dao.DataIsolationServiceDao;
 import com.billing.dataisolationservice.helper.CustomOutputStreamWriter;
 import com.billing.dataisolationservice.helper.DBType;
 import com.billing.dataisolationservice.helper.DbContextHolder;
+import com.billing.dataisolationservice.helper.GenericResponse;
 import com.billing.dataisolationservice.services.LegacyService;
 import com.billing.dataisolationservice.services.StrategicService;
 import com.billing.datasourceisolationservice.domain.ConfigInfo;
@@ -59,11 +60,9 @@ public class DataIsolationServiceController {
 		
 		List<Map<String,Object>> result = null;
 		
-		List<ConfigInfo> infoList = dao.getLocation(report);
+		ConfigInfo configInfo = dao.getLocation(report);
 		String sql = null;
 		
-		for (ConfigInfo configInfo : infoList) 
-		{
 			if (configInfo.getLocation().equalsIgnoreCase("Legacy")) 
 			{
 				sql = legacyservice.getLegacyQuery(report);
@@ -78,7 +77,6 @@ public class DataIsolationServiceController {
 			}
 			
 			result = daoabs.executeQuery(sql);
-		}
 		
 	
 		return CompletableFuture.completedFuture(new ResponseEntity<ArrayList<Map<String, Object>>>(
@@ -100,40 +98,40 @@ public class DataIsolationServiceController {
 		}
 		
 		List<Map<String,Object>> result = null;
-		String isWriteJsonComplete = null;
 		
-		List<ConfigInfo> info = dao.getLocation(report);
+		ConfigInfo configInfo = dao.getLocation(report);
 		String sql = null;
 		
-		for (ConfigInfo configInfo : info) {
-			
-			if (configInfo.getLocation().equalsIgnoreCase("Legacy")) {
-				sql = legacyservice.getLegacyQuery(report);
-			}
-			else {
-				sql = strategyservice.getStrategyQuery(report);
-			}
-			
-			if(null!=configInfo.getDatabase())
-			{
-				DbContextHolder.setDbType(DBType.valueOf(configInfo.getDatabase()));
-			}
-			
-			result = daoabs.executeQuery(sql);
-		    
-			isWriteJsonComplete = new CustomOutputStreamWriter().writeJsonToFile(result);
-			
+		if (configInfo.getLocation().equalsIgnoreCase("Legacy")) {
+			sql = legacyservice.getLegacyQuery(report);
+		}
+		else {
+			sql = strategyservice.getStrategyQuery(report);
 		}
 		
+		if(null!=configInfo.getDatabase())
+		{
+			DbContextHolder.setDbType(DBType.valueOf(configInfo.getDatabase()));
+		}
 		
-		final String resultJson = isWriteJsonComplete;
+		result = daoabs.executeQuery(sql);
+	    
+		GenericResponse genericResponse = new GenericResponse();
+		genericResponse.setRows(result);
+		genericResponse.setStatusCode(HttpStatus.OK.value());
+		genericResponse.setMessage("File creation successful");
+		
 		StreamingResponseBody stream = out ->
 		{
-			out.write(resultJson.getBytes());
+			new CustomOutputStreamWriter().writeJsonToFile(genericResponse).write(out);
+			out.flush();
 		};
+		
 		
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Content-Disposition", "attachment;filename=\"output.json\"");
+		headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+		 
 		
 		return CompletableFuture.completedFuture(new ResponseEntity<StreamingResponseBody>(stream, headers, HttpStatus.OK));
 		
