@@ -1,7 +1,5 @@
 package com.billing.test.services;
 
-import static org.mockito.Mockito.when;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
