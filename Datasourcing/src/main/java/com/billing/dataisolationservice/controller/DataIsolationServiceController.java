@@ -73,7 +73,7 @@ public class DataIsolationServiceController {
 			
 			if(null!=configInfo.getDatabase())
 			{
-				DbContextHolder.setDbType(DBType.valueOf(configInfo.getDatabase()));
+				DbContextHolder.getInstance().setDbType(DBType.valueOf(configInfo.getDatabase()));
 			}
 			
 			result = daoabs.executeQuery(sql);
@@ -94,7 +94,7 @@ public class DataIsolationServiceController {
 		
 		if("".equalsIgnoreCase(report))
 		{
-			report = "December";
+			report = "October1";
 		}
 		
 		List<Map<String,Object>> result = null;
@@ -111,7 +111,7 @@ public class DataIsolationServiceController {
 		
 		if(null!=configInfo.getDatabase())
 		{
-			DbContextHolder.setDbType(DBType.valueOf(configInfo.getDatabase()));
+			DbContextHolder.getInstance().setDbType(DBType.valueOf(configInfo.getDatabase()));
 		}
 		
 		result = daoabs.executeQuery(sql);

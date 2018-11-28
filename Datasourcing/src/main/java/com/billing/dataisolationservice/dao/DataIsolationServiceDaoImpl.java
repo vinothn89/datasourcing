@@ -24,11 +24,11 @@ public class DataIsolationServiceDaoImpl  implements DataIsolationServiceDao{
 	
 	@Override
 	public ConfigInfo getLocation(String reportgenerate) {
-		String sql = "SELECT Name,location,data_group FROM CONFIG WHERE Name=?";
+		String sql = "SELECT Report_Name,location,DB_DETAILS FROM CONFIG WHERE Report_Name=?";
 		try {
 			System.out.println("rep"+reportgenerate);
 			
-			DbContextHolder.setDbType(DBType.DEFAULT);
+			DbContextHolder.getInstance().setDbType(DBType.DEFAULT);
 			
 			Connection con = null;
 			con = dsr.getConnection();
